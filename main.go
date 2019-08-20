@@ -17,8 +17,11 @@ func main() {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
+	log.SetFormatter(&log.JSONFormatter{})
+	log.SetOutput(os.Stdout)
+	log.Info("go-docker is going to be started")
 	if err := cmd.Run(); err != nil {
 		log.Fatal(err)
 	}
-
+	log.Info("go-docker is stopped")
 }
