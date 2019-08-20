@@ -1,12 +1,12 @@
 package main
 
 import (
+	"os"
 	"os/exec"
 	"syscall"
-	"os"
-	"log"
-)
 
+	log "github.com/Sirupsen/logrus"
+)
 
 func main() {
 	cmd := exec.Command("bash")
@@ -21,8 +21,4 @@ func main() {
 		log.Fatal(err)
 	}
 
-
 }
-
-
-
