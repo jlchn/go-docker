@@ -33,4 +33,5 @@ install GoDep
 
 ```bash
 sudo apt-get install go-dep
+dep init
 ```
