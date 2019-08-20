@@ -24,3 +24,13 @@ https://github.com/Intika-Linux-Namespace/Namespace-Lister/blob/master/listns.py
 #### UTS Namespace
 
 UTS Namespace is used to isolate node name and domain name
+
+
+
+### Developmment
+
+install GoDep
+
+```bash
+sudo apt-get install go-dep
+```
