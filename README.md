@@ -15,8 +15,11 @@ more /proc/7053/status | grep "NSpid" # 7053 is the container PID from host poin
 > NSpid:	7053	1                 # inside of container namepsaces. 7053 mapped to 1
 ```
 
-
 ### Namespaces
+
+#### get all namepsaces on the host
+
+https://github.com/Intika-Linux-Namespace/Namespace-Lister/blob/master/listns.py
 
 #### UTS Namespace
 
