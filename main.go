@@ -35,6 +35,11 @@ var startContainerCommand = cli.Command{
 	Name: "startContainer",
 	Action: func(context *cli.Context) error {
 
+		log.Info(context.Args())
+
+		if context.Args() == nil || len(context.Args()) == 0 {
+			panic("no command provided to start a container")
+		}
 		//set a new hostname
 		if err := syscall.Sethostname([]byte("container")); err != nil {
 			fmt.Printf("Setting Hostname failed")
@@ -45,7 +50,6 @@ var startContainerCommand = cli.Command{
 		if err := syscall.Mount("proc", "/proc", "proc", uintptr(defaultMountFlags), ""); err != nil {
 			panic(err)
 		}
-		log.Info(context.Args())
 		cmd := context.Args().Get(0)
 
 		binary, err := exec.LookPath(cmd)
@@ -86,9 +90,25 @@ func SetNamespace(tty bool, command []string) {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 	}
+	
+	readPipe, writePipe, err := NewPipe()
+	if err != nil {
+		panic("cannot create pipe for docker process and container process")
+	}
+
+	cmd.ExtraFiles = []*os.File{readPipe}
 	if err := cmd.Run(); err != nil {
 		log.Error(err)
 	}
+}
+
+func NewPipe(*os.File, *os.File, error){
+	read, write, err := os.Pipe()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return read, write, nil
 }
 
 func main() {
