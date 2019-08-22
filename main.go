@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 
 	log "github.com/Sirupsen/logrus"
@@ -35,14 +37,15 @@ var startContainerCommand = cli.Command{
 	Name: "startContainer",
 	Action: func(context *cli.Context) error {
 
-		log.Info(context.Args())
-
-		if context.Args() == nil || len(context.Args()) == 0 {
+		cmdArray := ReadCommand()
+		log.Info(cmdArray)
+		if cmdArray == nil || len(cmdArray) == 0 {
 			panic("no command provided to start a container")
 		}
+
 		//set a new hostname
 		if err := syscall.Sethostname([]byte("container")); err != nil {
-			fmt.Printf("Setting Hostname failed")
+			panic(err)
 		}
 
 		//mount proc folder
@@ -50,14 +53,14 @@ var startContainerCommand = cli.Command{
 		if err := syscall.Mount("proc", "/proc", "proc", uintptr(defaultMountFlags), ""); err != nil {
 			panic(err)
 		}
-		cmd := context.Args().Get(0)
 
-		binary, err := exec.LookPath(cmd)
+		binary, err := exec.LookPath(cmdArray[0])
 		if err != nil {
 			panic(err)
 		}
-
-		if err := syscall.Exec(binary, context.Args(), os.Environ()); err != nil {
+		log.Info(cmdArray[0])
+		log.Info(cmdArray[0:])
+		if err := syscall.Exec(binary, cmdArray[0:], os.Environ()); err != nil {
 			log.Error(err)
 		}
 
@@ -66,8 +69,7 @@ var startContainerCommand = cli.Command{
 }
 
 func SetNamespace(tty bool, command []string) {
-	args := append([]string{"startContainer"}, command...)
-	cmd := exec.Command("/proc/self/exe", args...)
+	cmd := exec.Command("/proc/self/exe", "startContainer")
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Cloneflags: syscall.CLONE_NEWUTS | syscall.CLONE_NEWIPC | syscall.CLONE_NEWPID | syscall.CLONE_NEWNS | syscall.CLONE_NEWUSER | syscall.CLONE_NEWNET,
 		UidMappings: []syscall.SysProcIDMap{
@@ -90,25 +92,39 @@ func SetNamespace(tty bool, command []string) {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 	}
-	
+
 	readPipe, writePipe, err := NewPipe()
 	if err != nil {
 		panic("cannot create pipe for docker process and container process")
 	}
 
 	cmd.ExtraFiles = []*os.File{readPipe}
+	writePipe.WriteString(strings.Join(command, " "))
+	writePipe.Close()
 	if err := cmd.Run(); err != nil {
 		log.Error(err)
 	}
 }
 
-func NewPipe(*os.File, *os.File, error){
+func NewPipe() (*os.File, *os.File, error) {
 	read, write, err := os.Pipe()
 	if err != nil {
 		return nil, nil, err
 	}
 
 	return read, write, nil
+}
+
+func ReadCommand() []string {
+	pipe := os.NewFile(uintptr(3), "pipe")
+	msg, err := ioutil.ReadAll(pipe)
+	if err != nil {
+		log.Errorf("init read pipe error %v", err)
+		return nil
+	}
+	msgStr := string(msg)
+	log.Info(msgStr)
+	return strings.Split(msgStr, " ")
 }
 
 func main() {
