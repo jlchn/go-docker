@@ -10,14 +10,13 @@ import (
 
 func main() {
 
-	log.SetFormatter(&log.JSONFormatter{})
-	log.SetOutput(os.Stdout)
-
 	app := cli.NewApp()
 	app.Name = "go-docker"
 	app.Usage = "go-docker run [-it] <command>"
 
 	app.Before = func(context *cli.Context) error {
+		log.SetFormatter(&log.JSONFormatter{})
+		log.SetOutput(os.Stdout)
 		return nil
 	}
 
