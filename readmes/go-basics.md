@@ -281,7 +281,20 @@ func sum (values ...int) int {
 }
 
 ```
+
+### panic
+
+used to throw exceptions
+
 ### defer and recover
+
+A deferred function is a function that will be executed just after the surrounding function hits returned statement or panics. 
+
+A function can be deferred by adding defer keyword before the function call.
+
+recover likes try/catch way in other programming languages, it is a way to recover from panic
+
+recover function will return nil. So checking the return value of recover() to nil is a good way to know if your program is packing
 
 ``` go
 func A(){
@@ -309,3 +322,13 @@ func Parse(input string) (s *Syntax, err error) {
 }
 
 ```
+
+### Interfaces
+
+https://gobyexample.com/interfaces
+
+https://jordanorelli.com/post/32665860244/how-to-use-interfaces-in-go
+
+### inheritance
+
+https://hackthology.com/object-oriented-inheritance-in-go.html

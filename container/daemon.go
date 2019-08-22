@@ -1,6 +1,8 @@
 package container
 
 import (
+	"go-docker/cgroup"
+	"go-docker/cgroup/subsystem"
 	"go-docker/utils"
 	"os"
 	"os/exec"
@@ -54,7 +56,19 @@ func prepareCommand(tty bool) (*exec.Cmd, *os.File) {
 func folkContainerProcess(cmd *exec.Cmd, writePipe *os.File, command []string) {
 	utils.WriteToPipe(writePipe, strings.Join(command, " "))
 
-	if err := cmd.Run(); err != nil {
+	if err := cmd.Start(); err != nil {
 		log.Error(err)
 	}
+	cgroupManager := cgroup.NewCgroupManager("go-docker")
+	defer cgroupManager.Destroy()
+	resConf := &subsystem.ResourceConfig{
+		MemoryLimit: "1024",
+		CpuSet:      "0",
+		CpuShare:    "1024",
+	}
+	cgroupManager.Set(resConf)
+
+	cgroupManager.Apply(cmd.Process.Pid)
+
+	cmd.Wait()
 }
